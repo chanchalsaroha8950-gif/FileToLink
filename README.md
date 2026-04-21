@@ -69,7 +69,58 @@ Notes:
 - `STORAGE_CHANNEL_ID` me primary + secondary bot dono required access ke saath hone chahiye.
 - Agar Supabase use nahi karna: `USE_SUPABASE=0`.
 
-## 2) channels.txt Setup (Required Channel Lock)
+## 2) Supabase Database Setup
+
+Agar aap `USE_SUPABASE=1` use karna chahte hain, to bot start karne se **pehle** Supabase me schema create karna hoga.
+
+### Prerequisites
+
+1. [Supabase](https://supabase.com) par free account banayein.
+2. Ek naya project create karein.
+3. Project settings se **Project URL** (`SUPABASE_URL`) aur **service_role key** (`SUPABASE_SERVICE_ROLE_KEY`) copy karein:
+   - Dashboard → ⚙️ Project Settings → API → **Project URL** & **Service Role** secret.
+
+### `supabase.sql` kya hai?
+
+`supabase.sql` (repo root me) ek migration script hai jo bot ke liye required tables create karta hai:
+
+| Table | Purpose |
+|-------|---------|
+| `users` | Telegram user records |
+| `files` | Uploaded file metadata + share tokens |
+| `channels` | Required-join channel config |
+| `broadcasts` | Broadcast message tracking |
+
+### SQL Run Karo — Option A: Supabase SQL Editor (Recommended)
+
+1. Supabase Dashboard kholein → apna project select karein.
+2. Left sidebar me **SQL Editor** par click karein.
+3. **New query** click karein.
+4. `supabase.sql` file ka poora content copy karein aur editor me paste karein.
+5. **Run** (▶) button click karein.
+
+### SQL Run Karo — Option B: `psql` CLI
+
+```bash
+psql "postgresql://postgres:<YOUR_DB_PASSWORD>@db.<YOUR_PROJECT_REF>.supabase.co:5432/postgres" \
+  -f supabase.sql
+```
+
+Connection string aapko Supabase Dashboard → ⚙️ Project Settings → Database → **Connection string** me milegi.
+
+### `.env` me enable karein
+
+```dotenv
+USE_SUPABASE=1
+SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
+```
+
+> **Note:** Agar Supabase use nahi karna to `USE_SUPABASE=0` set karein — bot SQLite use karega.
+
+---
+
+## 3) channels.txt Setup (Required Channel Lock)
 
 Channel lock config ab `channels.txt` se hota hai.
 
@@ -91,7 +142,7 @@ Important:
 - Numbering continuous rakho: `1,2,3...`
 - Agar user ne channel join request send ki hai, secondary bot usko process karke access allow kar sakta hai (bot ko proper permissions chahiye)
 
-## 3) Run Bot
+## 4) Run Bot
 
 Recommended:
 
@@ -105,7 +156,7 @@ Stop running bots:
 ./stop_bots.sh
 ```
 
-## 4) How Flow Works
+## 5) How Flow Works
 
 ### Admin Upload Flow (Primary Bot)
 1. Admin file send karta hai primary bot ko
@@ -119,14 +170,14 @@ Stop running bots:
 3. Joined/requested user ko file deliver hoti hai
 4. File message 15 minutes me delete ho jata hai
 
-## 5) Supabase Notes
+## 6) Supabase Notes
 
 Agar `USE_SUPABASE=1`:
 - `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` required
 - `users` table me uploader user record pehle save hota hai
 - `files` table me file metadata save hota hai
 
-## 6) Common Errors & Fixes
+## 7) Common Errors & Fixes
 
 ### `foreign key constraint files_user_id_fkey`
 Cause: `files.user_id` ka user `users` table me missing.
@@ -148,7 +199,7 @@ Check:
 - Secondary bot channel me present/admin hai?
 - Join request mode me bot ko approve rights hai?
 
-## 7) Quick Test Checklist
+## 8) Quick Test Checklist
 
 1. `python main.py` run hota hai bina error
 2. Admin file upload karta hai, link milta hai
@@ -157,7 +208,7 @@ Check:
 5. Join/request ke baad `✅ Joined? Try Again` par file milti hai
 6. 15 min baad delivered message auto-delete hota hai
 
-## 8) Security Tips
+## 9) Security Tips
 
 - `.env` aur keys ko git me commit mat karo
 - Supabase service role key ko private rakho
