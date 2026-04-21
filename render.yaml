@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: filetolink-bot
+    runtime: python
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /health
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: BOT_TOKEN1
+        sync: false
+      - key: ADMIN_ID
+        sync: false
+      - key: LOG_CHANNEL
+        sync: false
+      - key: STORAGE_CHANNEL_ID
+        sync: false
+      - key: NEVER_EXPIRE_LINKS
+        value: "1"
+      - key: FILE_EXPIRY_MINUTES
+        value: "5"
+      - key: CLEANUP_INTERVAL_MINUTES
+        value: "1"
+      - key: BROADCAST_CLEANUP_INTERVAL_MINUTES
+        value: "30"
+      - key: USE_SUPABASE
+        value: "1"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

@@ -156,6 +156,37 @@ Stop running bots:
 ./stop_bots.sh
 ```
 
+## 4.1) Deploy on Render (with live URL)
+
+Is project me `render.yaml` add hai, so Render par direct Blueprint deploy ho sakta hai.
+
+### Steps
+
+1. Code GitHub par push karo.
+2. Render dashboard me jao: `New +` → `Blueprint`.
+3. Apna repo select karo (`FileToLink`).
+4. Render automatically `render.yaml` read karega.
+5. Required env vars fill karo:
+  - `BOT_TOKEN`, `BOT_TOKEN1`
+  - `ADMIN_ID`, `LOG_CHANNEL`, `STORAGE_CHANNEL_ID`
+  - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
+6. `Apply` / `Deploy` karo.
+
+### Deploy ke baad link
+
+Render aapko service URL dega, usually format me:
+
+```text
+https://<your-service-name>.onrender.com
+```
+
+Health check endpoint:
+
+```text
+https://<your-service-name>.onrender.com/health
+```
+
+Is endpoint par response `{"status":"ok"}` aayega jab app running hogi.
 ## 5) How Flow Works
 
 ### Admin Upload Flow (Primary Bot)

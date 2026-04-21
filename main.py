@@ -1,5 +1,8 @@
 import asyncio
 import logging
+import os
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from multiprocessing import Process
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -17,6 +20,43 @@ from utils.helpers import ADMIN_STATE
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+class _HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self) -> None:  # noqa: N802
+        if self.path in {"/", "/health"}:
+            body = b'{"status":"ok"}'
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
+        self.send_response(404)
+        self.end_headers()
+
+    def log_message(self, format: str, *args) -> None:  # noqa: A003
+        return
+
+
+def _start_health_server_if_needed() -> None:
+    port_raw = os.getenv("PORT", "5000").strip()
+    try:
+        port = int(port_raw)
+    except ValueError:
+        logger.warning("Invalid PORT value: %s", port_raw)
+        return
+
+    def _serve() -> None:
+        try:
+            httpd = HTTPServer(("0.0.0.0", port), _HealthHandler)
+            logger.info("Health server running at http://localhost:%s/health", port)
+            httpd.serve_forever()
+        except Exception as exc:
+            logger.error("Health server failed: %s", exc)
+
+    threading.Thread(target=_serve, name="render-health-server", daemon=True).start()
 
 
 async def post_init(app: Application) -> None:
@@ -84,6 +124,8 @@ def run_bot(bot_token: str, bot_role: str) -> None:
 def run() -> None:
     secondary_process: Process | None = None
     try:
+        _start_health_server_if_needed()
+
         if BOT_TOKEN1 and BOT_TOKEN1 != BOT_TOKEN:
             secondary_process = Process(target=run_bot, args=(BOT_TOKEN1, "secondary"), daemon=True)
             secondary_process.start()
